@@ -1,0 +1,138 @@
+/* Animation styles and reduced motion support */
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    /* Disable parallax effects */
+    [data-parallax] {
+        transform: none !important;
+    }
+    
+    /* Disable 3D transforms */
+    .apartment-card,
+    .common-area-panel,
+    .smart-feature,
+    .location-highlight {
+        transform: none !important;
+    }
+}
+
+/* Reduced motion class for JavaScript control */
+.reduced-motion * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+}
+
+.reduced-motion [data-parallax] {
+    transform: none !important;
+}
+
+/* Performance optimization classes */
+.gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+.optimize-animations {
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Animation performance hints */
+.animate-transform {
+    will-change: transform;
+}
+
+.animate-opacity {
+    will-change: opacity;
+}
+
+.animate-transform-opacity {
+    will-change: transform, opacity;
+}
+
+/* Remove will-change after animation */
+.animation-complete {
+    will-change: auto;
+}
+
+/* Smooth scrolling with performance consideration */
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* High performance mode styles */
+.performance-high .parallax-element {
+    transform: translate3d(0, 0, 0);
+}
+
+/* Medium performance mode styles */
+.performance-medium .parallax-element {
+    transform: translateY(0);
+}
+
+/* Low performance mode styles */
+.performance-low .parallax-element {
+    transform: none;
+}
+
+.performance-low .complex-animation {
+    display: none;
+}
+
+/* Intersection observer loading states */
+.lazy-animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.lazy-animate.loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Optimized hover states */
+.optimized-hover {
+    transition: transform 0.2s ease-out;
+}
+
+.optimized-hover:hover {
+    transform: translateY(-2px);
+}
+
+/* GPU layer promotion for smooth animations */
+.promote-layer {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Container queries for responsive animations */
+@container (max-width: 768px) {
+    .mobile-reduced-animation {
+        animation-duration: 0.3s !important;
+    }
+}
+
+/* Print styles - disable all animations */
+@media print {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+    }
+}
