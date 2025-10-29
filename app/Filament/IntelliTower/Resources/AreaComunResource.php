@@ -4,7 +4,7 @@ namespace App\Filament\IntelliTower\Resources;
 
 use App\Filament\IntelliTower\Resources\AreaComunResource\Pages;
 use App\Filament\IntelliTower\Resources\AreaComunResource\RelationManagers;
-use App\Filament\IntelliTower\Resources\AreaComunResource\RelationManagers\ReservasRelationManager;
+use App\Filament\IntelliTower\Resources\AreaComunResource\RelationManagers\HorariosDisponiblesRelationManager;
 use App\Models\AreaComun;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -36,54 +36,57 @@ class AreaComunResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Información del Área Común')
-                    ->description('Complete los datos básicos del área común')
+                    ->description('Información del área común disponible para reservas')
                     ->icon('heroicon-o-information-circle')
                     ->schema([
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\TextInput::make('nombre')
                                     ->label('Nombre del Área')
-                                    ->required()
-                                    ->maxLength(255)
                                     ->disabled()
-                                    ->placeholder('Ej: Salón de Eventos, Gimnasio, Piscina')
-                                    ->prefixIcon('heroicon-o-tag'),
+                                    ->prefixIcon('heroicon-o-tag')
+                                    ->columnSpan(1),
                                 
                                 Forms\Components\TextInput::make('capacidad')
-                                    ->label('Capacidad Máxima')
-                                    ->required()
+                                    ->label('Capacidad')
                                     ->disabled()
-                                    ->numeric()
-                                    ->minValue(1)
-                                    ->maxValue(1000)
-                                    ->placeholder('Número de personas')
                                     ->prefixIcon('heroicon-o-users')
-                                    ->suffix('personas'),
+                                    ->columnSpan(1),
                             ]),
                         
                         Forms\Components\Textarea::make('descripcion')
                             ->label('Descripción')
                             ->disabled()
-                            ->required()
-                            ->rows(3)
-                            ->placeholder('Describe las características y servicios del área común...')
+                            ->rows(4)
                             ->columnSpanFull(),
                     ]),
                 
-                Forms\Components\Section::make('Estado y Disponibilidad')
-                    ->description('Configure la disponibilidad del área')
-                    ->icon('heroicon-o-clock')
+                Forms\Components\Section::make('Estado del Área')
+                    ->description('Estado actual del área común')
+                    ->icon('heroicon-o-signal')
                     ->schema([
-                        Forms\Components\Toggle::make('disponibilidad')
-                            ->label('Área Disponible')
-                            ->helperText('Marque si el área está disponible para reservas')
-                            ->onIcon('heroicon-o-check-circle')
-                            ->disabled()
-                            ->offIcon('heroicon-o-x-circle')
-                            ->onColor('success')
-                            ->offColor('danger')
-                            ->required(),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Placeholder::make('estado')
+                                    ->label('Estado Actual')
+                                    ->content(fn ($record): string => $record?->estado ?? 'N/A')
+                                    ->extraAttributes([
+                                        'class' => 'text-lg font-semibold',
+                                        ])  
+                                    ->columnSpan(1),
+                                Forms\Components\TextInput::make('precio_por_hora')
+                                    ->label('Precio por Hora')
+                                    ->required()
+                                    ->numeric()
+                                    ->disabled()
+                                    ->step(0.01)
+                                    ->minValue(0)
+                                    ->prefix('$')
+                                    ->placeholder('0.00')
+                                    ->columnSpan(1),
+                            ]),
                     ]),
+                
             ]);
     }
 
@@ -113,20 +116,28 @@ class AreaComunResource extends Resource
                 
                 Tables\Columns\TextColumn::make('capacidad')
                     ->label('Capacidad')
-                    ->numeric()
+                    ->searchable()
                     ->sortable()
-                    ->suffix(' personas')
                     ->icon('heroicon-o-users')
                     ->color('info')
                     ->alignCenter(),
                 
-                Tables\Columns\IconColumn::make('disponibilidad')
+                Tables\Columns\BadgeColumn::make('estado')
                     ->label('Estado')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle')
-                    ->trueColor('success')
-                    ->falseColor('danger')
+                    ->colors([
+                        'success' => 'Disponible',
+                        'warning' => 'Mantenimiento',
+                        'danger' => 'Fuera de Servicio',
+                        'primary' => 'Reservado',
+                    ])
+                    ->icons([
+                        'heroicon-o-check-circle' => 'Disponible',
+                        'heroicon-o-wrench-screwdriver' => 'Mantenimiento',
+                        'heroicon-o-x-circle' => 'Fuera de Servicio',
+                        'heroicon-o-clock' => 'Reservado',
+                    ])
+                    ->sortable()
+                    ->searchable()
                     ->alignCenter(),
                 
                 Tables\Columns\TextColumn::make('created_at')
@@ -144,11 +155,17 @@ class AreaComunResource extends Resource
                     ->icon('heroicon-o-pencil'),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('disponibilidad')
-                    ->label('Disponibilidad')
-                    ->placeholder('Todas las áreas')
-                    ->trueLabel('Solo disponibles')
-                    ->falseLabel('Solo no disponibles'),
+                Tables\Filters\SelectFilter::make('estado')
+                    ->label('Estado')
+                    ->options([
+                        'Disponible' => 'Disponible',
+                        'Mantenimiento' => 'Mantenimiento',
+                        'Fuera de Servicio' => 'Fuera de Servicio',
+                        'Reservado' => 'Reservado',
+                    ])
+                    ->multiple()
+                    ->placeholder('Todos los estados')
+                    ->default(['Disponible']),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -188,7 +205,7 @@ class AreaComunResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\ReservasRelationManager::class,
+            RelationManagers\HorariosDisponiblesRelationManager::class,
         ];
     }
 

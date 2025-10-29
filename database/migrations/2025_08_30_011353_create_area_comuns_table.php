@@ -15,10 +15,10 @@ return new class extends Migration
 
         Schema::create('area_comuns', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre', 100);
-            $table->text('descripcion');
-            $table->integer('capacidad');
-            $table->boolean('disponibilidad');
+            $table->string('nombre');
+            $table->text('descripcion')->nullable();
+            $table->string('capacidad');
+            $table->string('estado');
             $table->timestamps();
         });
 

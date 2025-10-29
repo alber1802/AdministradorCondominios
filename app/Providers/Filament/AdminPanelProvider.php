@@ -37,7 +37,6 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->passwordReset()
-            ->emailVerification()
             ->profile()
             ->databaseNotifications()
             ->brandLogo(asset('mis_imagenes/logo/logo-sin-fondo.png'))

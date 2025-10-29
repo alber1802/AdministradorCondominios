@@ -2,29 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\Notification;
+
 class Reserva extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory,HasUuids;
 
     protected $table = 'reservas';
+    
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'area_id',
-        'user_id',
-        'fecha_inicio',
-        'fecha_fin',
-        'estado',
-        'qr_code',
+        'area_comun_id',
+        'residente_id',
+        'fecha_hora_inicio',
+        'fecha_hora_fin',
+        'costo_total_calculado',
+        'estado_reserva',
     ];
 
     /**
@@ -35,21 +38,22 @@ class Reserva extends Model
     protected function casts(): array
     {
         return [
-            'area_id' => 'integer',
-            'user_id' => 'integer',
-            'fecha_inicio' => 'datetime',
-            'fecha_fin' => 'datetime',
+            'area_comun_id' => 'integer',
+            'residente_id' => 'integer',
+            'fecha_hora_inicio' => 'datetime',
+            'fecha_hora_fin' => 'datetime',
+            'costo_total_calculado' => 'decimal:2',
         ];
     }
 
-    public function user(): BelongsTo
+    public function residente(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'residente_id');
     }
 
     public function areaComun(): BelongsTo
     {
-        return $this->belongsTo(AreaComun::class,'area_id');
+        return $this->belongsTo(AreaComun::class, 'area_comun_id');
     }
 
     public static function boot()
@@ -60,9 +64,10 @@ class Reserva extends Model
 
         $recipient = User::where('rol', 'admin')->first();
 
-            Notification::make()
+
+            \Filament\Notifications\Notification::make()
             ->title("Nueva Reserva Creada")
-            ->body("Se ha creado una nueva reserva para {$reserva->areaComun->nombre} el {$reserva->fecha_inicio}.")
+            ->body("Se ha creado una nueva reserva para {$reserva->areaComun->nombre} el {$reserva->fecha_hora_inicio}.")
             ->icon('heroicon-o-bell')
             ->color("primary")
             ->actions([
@@ -75,11 +80,11 @@ class Reserva extends Model
             ->sendToDatabase($recipient);
 
         //se ha creado ua reserva pra el usuario       
-            $recipient2 = User::find($reserva->user_id);
+            $recipient2 = User::find($reserva->residente_id);
 
-            Notification::make()
+            \Filament\Notifications\Notification::make()
             ->title("Nueva Reserva Creada")
-            ->body("Se ha creado una nueva reserva para {$reserva->areaComun->nombre} el {$reserva->fecha_inicio}.")
+            ->body("Se ha creado una nueva reserva para {$reserva->areaComun->nombre} el {$reserva->fecha_hora_inicio}.")
             ->icon('heroicon-o-bell')
             ->color("primary")
             ->actions([

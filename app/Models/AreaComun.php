@@ -21,7 +21,8 @@ class AreaComun extends Model
         'nombre',
         'descripcion',
         'capacidad',
-        'disponibilidad',
+        'estado',
+        'precio_por_hora',
     ];
 
     /**
@@ -33,12 +34,16 @@ class AreaComun extends Model
     {
         return [
             'id' => 'integer',
-            'disponibilidad' => 'boolean',
         ];
     }
 
     public function reservas(): HasMany
     {
-        return $this->hasMany(Reserva::class);
+        return $this->hasMany(Reserva::class, 'area_comun_id');
+    }
+
+    public function horariosDisponibles(): HasMany
+    {
+        return $this->hasMany(HorarioDisponible::class, 'area_comun_id');
     }
 }

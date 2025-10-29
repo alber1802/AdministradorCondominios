@@ -13,14 +13,12 @@ return new class extends Migration
     {
         Schema::disableForeignKeyConstraints();
 
-        Schema::create('reservas', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+        Schema::create('horarios_disponibles', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('area_comun_id')->constrained('area_comuns')->onDelete('cascade');
-            $table->foreignId('residente_id')->constrained('users')->onDelete('cascade');
-            $table->dateTime('fecha_hora_inicio');
-            $table->dateTime('fecha_hora_fin');
-            $table->decimal('costo_total_calculado', 10, 2);
-            $table->string('estado_reserva', 50)->default('Confirmada');
+            $table->integer('dia_semana');
+            $table->time('hora_apertura');
+            $table->time('hora_cierre');
             $table->timestamps();
         });
 
@@ -32,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reservas');
+        Schema::dropIfExists('horarios_disponibles');
     }
 };

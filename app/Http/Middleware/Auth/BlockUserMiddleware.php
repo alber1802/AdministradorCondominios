@@ -31,6 +31,10 @@ class BlockUserMiddleware
 
             // Redirigir al login con la notificación
             return redirect()->route('filament.intelliTower.auth.login');
+        }
+        if (Auth::user()->rol == 'super_admin') {
+            
+            return redirect()->route('filament.admin.pages.dashboard');
         }   
         return $next($request);
     }

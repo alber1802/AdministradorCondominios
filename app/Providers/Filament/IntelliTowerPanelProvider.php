@@ -45,7 +45,6 @@ class IntelliTowerPanelProvider extends PanelProvider
             ->id('intelliTower')
             ->path('intelliTower')
             ->login(\App\Filament\IntelliTower\Pages\Auth\Login::class)
-            ->emailVerification(EmailVerification::class)
             ->profile()
             ->brandLogo(asset('mis_imagenes/logo/logo-sin-fondo.png'))
             ->brandLogoHeight('5rem')
@@ -95,7 +94,7 @@ class IntelliTowerPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-                 BlockUserMiddleware::class,
+                BlockUserMiddleware::class,
                 
             ])
             ->plugin(
