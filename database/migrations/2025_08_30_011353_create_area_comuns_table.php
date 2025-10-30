@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('descripcion')->nullable();
             $table->string('capacidad');
             $table->string('estado');
+            $table->decimal('precio_por_hora', 10, 2)->default(0);
             $table->timestamps();
         });
 

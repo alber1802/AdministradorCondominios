@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\IntelliTower\Resources;
 
-use App\Filament\Resources\ReservaResource\Pages;
-use App\Filament\Resources\ReservaResource\RelationManagers;
+use App\Filament\IntelliTower\Resources\ReservaResource\Pages;
 use App\Filament\Forms\Components\HorariosDisponibles;
 use App\Models\Reserva;
 use App\Models\AreaComun;
@@ -15,7 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class ReservaResource extends Resource
 {
@@ -23,15 +22,28 @@ class ReservaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static ?string $navigationGroup = 'Condominios';
+    protected static ?string $navigationGroup = 'Mis Servicios';
+
+    protected static ?string $navigationLabel = 'Mis Reservas';
+
+    protected static ?string $modelLabel = 'Reserva';
+
+    protected static ?string $pluralModelLabel = 'Reservas';
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return static::getEloquentQuery()->count();
     }
+
     public static function getNavigationBadgeColor(): ?string
     {
-        return static::getModel()::count() > 10 ? 'info' : 'success';
+        return static::getEloquentQuery()->count() > 0 ? 'success' : 'gray';
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('residente_id', Auth::id());
     }
 
     protected static function calcularCosto(Set $set, Get $get): void
@@ -64,7 +76,7 @@ class ReservaResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Información de la Reserva')
-                    ->description('Seleccione el área común y el residente para la reserva')
+                    ->description('Seleccione el área común que desea reservar')
                     ->schema([
                         Forms\Components\Select::make('area_comun_id')
                             ->label('Área Común')
@@ -77,15 +89,7 @@ class ReservaResource extends Resource
                                 self::calcularCosto($set, $get);
                             })
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->nombre} - \${$record->precio_por_hora}/hora")
-                            ->columnSpan(1),
-                        
-                        Forms\Components\Select::make('residente_id')
-                            ->label('Residente')
-                            ->relationship('residente', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->columnSpan(1),
+                            ->columnSpanFull(),
                         
                         Forms\Components\ViewField::make('horarios_info')
                             ->label('')
@@ -94,8 +98,11 @@ class ReservaResource extends Resource
                                 'areaId' => $get('area_comun_id'),
                             ])
                             ->columnSpanFull(),
+                        
+                        Forms\Components\Hidden::make('residente_id')
+                            ->default(Auth::id())
+                            ->required(),
                     ])
-                    ->columns(2)
                     ->collapsible(),
                 
                 Forms\Components\Section::make('Horario de la Reserva')
@@ -104,8 +111,6 @@ class ReservaResource extends Resource
                         Forms\Components\DateTimePicker::make('fecha_hora_inicio')
                             ->label('Fecha y Hora de Inicio')
                             ->native(false)
-                            ->maxDate(now()->addDays(7))
-                            ->minDate(now())
                             ->displayFormat('d/m/Y H:i')
                             ->seconds(false)
                             ->minutesStep(15)
@@ -119,8 +124,6 @@ class ReservaResource extends Resource
                         Forms\Components\DateTimePicker::make('fecha_hora_fin')
                             ->label('Fecha y Hora de Fin')
                             ->native(false)
-                            ->maxDate(now()->addDays(7))
-                             ->minDate(now())
                             ->displayFormat('d/m/Y H:i')
                             ->seconds(false)
                             ->minutesStep(15)
@@ -180,6 +183,8 @@ class ReservaResource extends Resource
                             ])
                             ->default('pendiente')
                             ->required()
+                            ->disabled()
+                            ->dehydrated()
                             ->columnSpan(1),
                     ])
                     ->columns(2)
@@ -191,31 +196,26 @@ class ReservaResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                
                 Tables\Columns\TextColumn::make('areaComun.nombre')
                     ->label('Área Común')
                     ->searchable()
-                    ->sortable(),
-                
-                Tables\Columns\TextColumn::make('residente.name')
-                    ->label('Residente')
-                    ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-building-office-2')
+                    ->iconColor('primary'),
                 
                 Tables\Columns\TextColumn::make('fecha_hora_inicio')
                     ->label('Inicio')
                     ->dateTime('d/m/Y H:i')
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-calendar')
+                    ->iconColor('success'),
                 
                 Tables\Columns\TextColumn::make('fecha_hora_fin')
                     ->label('Fin')
                     ->dateTime('d/m/Y H:i')
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-calendar')
+                    ->iconColor('danger'),
                 
                 Tables\Columns\TextColumn::make('costo_total_calculado')
                     ->label('Costo')
@@ -243,12 +243,6 @@ class ReservaResource extends Resource
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Actualizado')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('estado_reserva')
@@ -267,36 +261,22 @@ class ReservaResource extends Resource
                     ->preload(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
-                        ->color('info')
-                        ->icon('heroicon-o-eye')
-                        ->label('Ver Detalles'),
-                    Tables\Actions\EditAction::make()
-                        ->color('warning')
-                        ->icon('heroicon-o-pencil-square')
-                        ->label('Editar'),
-                    Tables\Actions\DeleteAction::make()
-                        ->color('danger')
-                        ->icon('heroicon-o-trash')
-                        ->label('Eliminar')
-                        ->requiresConfirmation()
-                        ->modalHeading('Eliminar Reserva')
-                        ->modalDescription('¿Está seguro de que desea eliminar esta reserva? Esta acción no se puede deshacer.')
-                        ->modalSubmitActionLabel('Sí, eliminar'),
-            ])
-                ->label('Acciones')
-                ->icon('heroicon-m-ellipsis-vertical')
-                ->size('sm')
-                ->color('info')
-                ->button(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (Reserva $record) => in_array($record->estado_reserva, ['pendiente'])),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn (Reserva $record) => in_array($record->estado_reserva, ['pendiente'])),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn () => false), // Deshabilitado para usuarios
                 ]),
             ])
-            ->defaultSort('fecha_hora_inicio', 'desc');
+            ->defaultSort('fecha_hora_inicio', 'desc')
+            ->emptyStateHeading('No tienes reservas')
+            ->emptyStateDescription('Crea tu primera reserva de un área común')
+            ->emptyStateIcon('heroicon-o-calendar-days');
     }
 
     public static function getRelations(): array

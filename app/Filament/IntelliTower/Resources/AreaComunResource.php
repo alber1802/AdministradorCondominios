@@ -90,7 +90,7 @@ class AreaComunResource extends Resource
             ]);
     }
 
-    public static function table(Table $table): Table
+   public static function table(Table $table): Table
     {
         return $table
             ->columns([
@@ -120,6 +120,14 @@ class AreaComunResource extends Resource
                     ->sortable()
                     ->icon('heroicon-o-users')
                     ->color('info')
+                    ->alignCenter(),
+                Tables\Columns\TextColumn::make('precio_por_hora')
+                    ->label('Precio por Hora')
+                    ->money('USD')
+                    ->sortable()
+                    ->searchable()
+                    ->icon('heroicon-o-currency-dollar')
+                    ->color('success')
                     ->alignCenter(),
                 
                 Tables\Columns\BadgeColumn::make('estado')
@@ -164,8 +172,7 @@ class AreaComunResource extends Resource
                         'Reservado' => 'Reservado',
                     ])
                     ->multiple()
-                    ->placeholder('Todos los estados')
-                    ->default(['Disponible']),
+                    ->placeholder('Todos los estados'),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -174,9 +181,9 @@ class AreaComunResource extends Resource
                         ->icon('heroicon-o-eye'),
                     Tables\Actions\EditAction::make()
                         ->color('warning')
-                        ->label('Reservar')
                         ->icon('heroicon-o-pencil-square'),
-                    // DeleteAction removed as per requirements
+                    Tables\Actions\DeleteAction::make()
+                        ->icon('heroicon-o-trash'),
                 ])
                 ->label('Acciones')
                 ->icon('heroicon-o-ellipsis-vertical')
@@ -186,7 +193,8 @@ class AreaComunResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    // DeleteBulkAction removed as per requirements
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->icon('heroicon-o-trash'),
                 ])
                 ->label('Acciones en lote'),
             ])

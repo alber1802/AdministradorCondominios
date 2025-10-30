@@ -122,9 +122,7 @@ class AdminPanelProvider extends PanelProvider
                     ->title('Banner/Anuncios')
                     ->navigationGroup('Configuracion')
                     ->subheading('Anuncios para los administradores '),
-                ChatifyPlugin::make()
-                    ->customPage(CustomChatifyPage::class)
-                    ->disableFloatingChatWidget(),
+                
                 FilamentShieldPlugin::make(),
 
             ]);

@@ -131,9 +131,7 @@ class IntelliTowerPanelProvider extends PanelProvider
                         MyImages::make()
                             ->directory('\mis_imagenes\fondos')
                     ),
-                ChatifyPlugin::make(),
-                // ->customPage(CustomChatifyPage::class)
-                // ->disableFloatingChatWidget(),
+                
             ]);
             
     }

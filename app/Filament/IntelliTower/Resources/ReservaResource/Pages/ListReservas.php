@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\ReservaResource\Pages;
+namespace App\Filament\IntelliTower\Resources\ReservaResource\Pages;
 
-use App\Filament\Resources\ReservaResource;
+use App\Filament\IntelliTower\Resources\ReservaResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
@@ -18,7 +18,8 @@ class ListReservas extends ListRecords
                 ->icon('heroicon-o-calendar-days')
                 ->color('info')
                 ->url(fn (): string => ReservaResource::getUrl('calendario')),
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Nueva Reserva'),
         ];
     }
 }

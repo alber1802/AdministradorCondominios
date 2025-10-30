@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Filament\Resources\UserResource\RelationManagers\DepartamentosRelationManager;
-use App\Filament\Resources\UserResource\RelationManagers\ReservasRelationManager;
+
 use App\Filament\Resources\UserResource\RelationManagers\NominasRelationManager;
 use App\Filament\Resources\UserResource\RelationManagers\PropietarioRelationManager;
 use App\Models\User;
@@ -271,7 +271,6 @@ class UserResource extends Resource
         return [
             //
             RelationManagers\DepartamentosRelationManager::class,
-            RelationManagers\ReservasRelationManager::class,
             RelationManagers\NominasRelationManager::class,
             RelationManagers\PropietarioRelationManager::class,
             
@@ -285,6 +284,7 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'view' => Pages\ViewUser::route('/{record}'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
+            
         ];
     }
     

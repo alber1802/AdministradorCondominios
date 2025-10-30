@@ -1,29 +1,22 @@
 <?php
 
-namespace App\Filament\Resources\ReservaResource\Pages;
+namespace App\Filament\IntelliTower\Resources\ReservaResource\Pages;
 
-use App\Filament\Resources\ReservaResource;
+use App\Filament\IntelliTower\Resources\ReservaResource;
 use App\Models\AreaComun;
 use App\Models\HorarioDisponible;
 use App\Models\Reserva;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\EditRecord;
+use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
 
-class EditReserva extends EditRecord
+class CreateReserva extends CreateRecord
 {
     protected static string $resource = ReservaResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\ViewAction::make(),
-            Actions\DeleteAction::make(),
-        ];
-    }
-
-    protected function mutateFormDataBeforeSave(array $data): array
+    protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Validar que el área común esté disponible
         $areaComun = AreaComun::find($data['area_comun_id']);
@@ -37,7 +30,6 @@ class EditReserva extends EditRecord
             $this->halt();
         }
 
-       
         if ($areaComun->estado !== 'Disponible') {
             Notification::make()
                 ->title('Área No Disponible')
@@ -48,15 +40,16 @@ class EditReserva extends EditRecord
         }
 
         // Validar fechas
-        $fechaInicio = Carbon::parse($data['fecha_hora_inicio']);
-        $fechaFin = Carbon::parse($data['fecha_hora_fin']);
+        $fechaInicio = Carbon::parse( $data["fecha_hora_inicio"]);
+
+        $fechaFin = Carbon::parse($data["fecha_hora_fin"]);
         $ahora = Carbon::now();
 
-        // Validar que la fecha de inicio sea futura (solo si no es una reserva ya pasada)
-        if ($fechaInicio->lte($ahora) && $this->record->fecha_hora_inicio->gt($ahora)) {
+        // Validar que la fecha de inicio sea futura
+        if ($fechaInicio->lte($ahora)) {
             Notification::make()
                 ->title('Fecha Inválida')
-                ->body('No puede cambiar la fecha de inicio a una fecha pasada.')
+                ->body('La fecha de inicio debe ser posterior a la fecha y hora actual.')
                 ->warning()
                 ->send();
             $this->halt();
@@ -87,7 +80,7 @@ class EditReserva extends EditRecord
         if ($duracionHoras > 24) {
             Notification::make()
                 ->title('Duración Excesiva')
-                ->body('La reserva no puede exceder las 24 horas.')
+                ->body('La reserva no puede exceder las 24 horas. Para reservas más largas, cree múltiples reservas.')
                 ->warning()
                 ->send();
             $this->halt();
@@ -96,8 +89,8 @@ class EditReserva extends EditRecord
         // Validar horario disponible del área común
         $this->validarHorarioDisponible($areaComun, $fechaInicio, $fechaFin);
 
-        // Validar conflictos con otras reservas (excluyendo la reserva actual)
-        $this->validarConflictosReservas($data['area_comun_id'], $fechaInicio, $fechaFin, $this->record->id);
+        // Validar conflictos con otras reservas
+        $this->validarConflictosReservas($data['area_comun_id'], $fechaInicio, $fechaFin);
 
         return $data;
     }
@@ -146,17 +139,16 @@ class EditReserva extends EditRecord
         if ($fechaInicio->isSameDay($fechaFin) && $horaFin < $horaInicio) {
             Notification::make()
                 ->title('Horario Inválido')
-                ->body('La reserva no puede cruzar la medianoche.')
+                ->body('La reserva no puede cruzar la medianoche. Por favor, cree reservas separadas.')
                 ->warning()
                 ->send();
             $this->halt();
         }
     }
 
-    protected function validarConflictosReservas(int $areaId, Carbon $fechaInicio, Carbon $fechaFin, string $reservaActualId): void
+    protected function validarConflictosReservas(int $areaId, Carbon $fechaInicio, Carbon $fechaFin): void
     {
         $reservasConflicto = Reserva::where('area_comun_id', $areaId)
-            ->where('id', '!=', $reservaActualId)
             ->whereIn('estado_reserva', ['pendiente', 'confirmada'])
             ->where(function ($query) use ($fechaInicio, $fechaFin) {
                 $query->whereBetween('fecha_hora_inicio', [$fechaInicio, $fechaFin])
@@ -170,7 +162,7 @@ class EditReserva extends EditRecord
 
         if ($reservasConflicto->isNotEmpty()) {
             $conflictos = $reservasConflicto->map(function ($reserva) {
-                return "• {$reserva->fecha_hora_inicio->format('d/m/Y H:i')} - {$reserva->fecha_hora_fin->format('H:i')} (Residente: {$reserva->residente->name})";
+                return "• {$reserva->fecha_hora_inicio->format('d/m/Y H:i')} - {$reserva->fecha_hora_fin->format('H:i')}";
             })->join("\n");
 
             Notification::make()
@@ -203,8 +195,8 @@ class EditReserva extends EditRecord
         return $this->getResource()::getUrl('index');
     }
 
-    protected function getSavedNotificationTitle(): ?string
+    protected function getCreatedNotificationTitle(): ?string
     {
-        return 'Reserva actualizada exitosamente';
+        return 'Reserva creada exitosamente';
     }
 }

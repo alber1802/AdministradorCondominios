@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\ReservaResource\Pages;
+namespace App\Filament\IntelliTower\Resources\ReservaResource\Pages;
 
-use App\Filament\Resources\ReservaResource;
+use App\Filament\IntelliTower\Resources\ReservaResource;
 use App\Models\AreaComun;
 use App\Models\HorarioDisponible;
 use App\Models\Reserva;
@@ -19,12 +19,23 @@ class EditReserva extends EditRecord
     {
         return [
             Actions\ViewAction::make(),
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->visible(fn (Reserva $record) => in_array($record->estado_reserva, ['pendiente'])),
         ];
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        // Solo permitir editar reservas pendientes
+        if ($this->record->estado_reserva !== 'pendiente') {
+            Notification::make()
+                ->title('No Permitido')
+                ->body('Solo puede editar reservas en estado pendiente.')
+                ->warning()
+                ->send();
+            $this->halt();
+        }
+
         // Validar que el área común esté disponible
         $areaComun = AreaComun::find($data['area_comun_id']);
         
@@ -37,8 +48,7 @@ class EditReserva extends EditRecord
             $this->halt();
         }
 
-       
-        if ($areaComun->estado !== 'Disponible') {
+        if ($areaComun->estado !== 'disponible') {
             Notification::make()
                 ->title('Área No Disponible')
                 ->body("El área '{$areaComun->nombre}' no está disponible para reservas en este momento.")
@@ -170,7 +180,7 @@ class EditReserva extends EditRecord
 
         if ($reservasConflicto->isNotEmpty()) {
             $conflictos = $reservasConflicto->map(function ($reserva) {
-                return "• {$reserva->fecha_hora_inicio->format('d/m/Y H:i')} - {$reserva->fecha_hora_fin->format('H:i')} (Residente: {$reserva->residente->name})";
+                return "• {$reserva->fecha_hora_inicio->format('d/m/Y H:i')} - {$reserva->fecha_hora_fin->format('H:i')}";
             })->join("\n");
 
             Notification::make()
