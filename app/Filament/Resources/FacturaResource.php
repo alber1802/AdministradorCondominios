@@ -83,7 +83,35 @@ class FacturaResource extends Resource
                                         ])
                                         ->required()
                                         ->native(false)
-                                        ->prefixIcon('heroicon-o-tag'),
+                                        ->prefixIcon('heroicon-o-tag')
+                                        ->live()
+                                        ->afterStateUpdated(function ($state, callable $set) {
+                                            // Establecer monto según el tipo
+                                            $montos = [
+                                                'mantenimiento' => 500,
+                                                'expensas' => 800,
+                                                'alquiler' => 1200,
+                                                'servicios' => 300,
+                                            ];
+                                            
+                                            if (isset($montos[$state])) {
+                                                $set('monto', $montos[$state]);
+                                            }
+                                            
+                                            // Establecer descripción según el tipo
+                                            $descripciones = [
+                                                'mantenimiento' => '<p><strong>Mantenimiento mensual que incluye:</strong></p><ul><li>Mantenimiento de ascensores</li><li>Mantenimiento de bombas de agua</li><li>Mantenimiento de cámaras de seguridad</li><li>Mantenimiento de garaje y portones</li><li>Revisión de instalaciones eléctricas</li></ul>',
+                                                'expensas' => '<p><strong>Expensas mensuales que cubren:</strong></p><ul><li>Productos de limpieza</li><li>Pago a trabajadores de mantenimiento</li><li>Servicios de seguridad</li><li>Gastos administrativos</li><li>Consumo de áreas comunes</li></ul>',
+                                                'alquiler' => '<p><strong>Alquiler mensual del departamento</strong></p><p>Incluye el uso del inmueble y acceso a todas las áreas comunes del edificio.</p>',
+                                                'servicios' => '<p><strong>Servicios básicos mensuales:</strong></p><ul><li>Agua</li><li>Luz de áreas comunes</li><li>Internet del edificio</li><li>Recolección de basura</li></ul>',
+                                            ];
+                                            
+                                            if (isset($descripciones[$state])) {
+                                                $set('descripcion', $descripciones[$state]);
+                                            } else {
+                                                $set('descripcion', '');
+                                            }
+                                        }),
                                 ])
                                 ->columns(3),
                                 
@@ -96,7 +124,16 @@ class FacturaResource extends Resource
                                         ->numeric()
                                         ->prefix('$')
                                         ->step(0.01)
-                                        ->prefixIcon('heroicon-o-banknotes'),
+                                        ->prefixIcon('heroicon-o-banknotes')
+                                        ->disabled(fn (callable $get) => in_array($get('tipo'), ['mantenimiento', 'expensas', 'alquiler', 'servicios']))
+                                        ->dehydrated(true)
+                                        ->helperText(fn (callable $get) => match($get('tipo')) {
+                                            'mantenimiento' => 'Monto fijo: $500',
+                                            'expensas' => 'Monto fijo: $800',
+                                            'alquiler' => 'Monto fijo: $1,200',
+                                            'servicios' => 'Monto fijo: $300',
+                                            default => 'Ingrese el monto correspondiente'
+                                        }),
                                         
                                     Forms\Components\Select::make('estado')
                                         ->label('Estado')
@@ -133,12 +170,15 @@ class FacturaResource extends Resource
                                     Forms\Components\DatePicker::make('fecha_emision')
                                         ->label('Fecha de Emisión')
                                         ->native(false)
+                                        ->minDate(now())
                                         ->required()
                                         ->default(now())
                                         ->prefixIcon('heroicon-o-calendar'),
                                         
                                     Forms\Components\DatePicker::make('fecha_vencimiento')
                                         ->label('Fecha de Vencimiento')
+                                        ->minDate(now())
+                                        ->maxDate(now()->addDays(30))
                                         ->required()
                                         ->native(false)
                                         ->prefixIcon('heroicon-o-clock'),
@@ -148,10 +188,19 @@ class FacturaResource extends Resource
                             Forms\Components\Section::make('Información Adicional')
                                 ->icon('heroicon-o-document-text')
                                 ->schema([
-                                    Forms\Components\Textarea::make('descripcion')
+                                    Forms\Components\RichEditor::make('descripcion')
                                         ->label('Descripción')
-                                        ->rows(3)
-                                        ->columnSpanFull(),
+                                        ->toolbarButtons([
+                                            'bold',
+                                            'italic',
+                                            'underline',
+                                            'bulletList',
+                                            'orderedList',
+                                            'h2',
+                                            'h3',
+                                        ])
+                                        ->columnSpanFull()
+                                        ->helperText('Puede editar y personalizar la descripción según sea necesario'),
                                 ]),
                         ]),
                         
@@ -491,7 +540,8 @@ class FacturaResource extends Resource
                         ->icon('heroicon-o-eye'),
                     Tables\Actions\EditAction::make()
                         ->color('warning')
-                        ->icon('heroicon-o-pencil'),
+                        ->icon('heroicon-o-pencil')
+                        ->visible(fn ($record) => $record->fecha_vencimiento >= now()->toDateString()),
                   
                     Tables\Actions\Action::make('descargar_comprobante')
                         ->label('PDF')

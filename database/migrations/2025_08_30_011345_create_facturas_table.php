@@ -24,7 +24,7 @@ return new class extends Migration
             $table->date('fecha_vencimiento')->nullable();
             $table->string('qr_code')->nullable();
             $table->string('comprobante_pdf')->nullable();
-            $table->string('descripcion')->nullable();
+            $table->text('descripcion')->nullable();
             $table->timestamps();
         });
 

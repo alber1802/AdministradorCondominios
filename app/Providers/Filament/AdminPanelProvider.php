@@ -3,7 +3,6 @@
 namespace App\Providers\Filament;
 
 use Afsakar\FilamentOtpLogin\FilamentOtpLoginPlugin;
-use App\Filament\Pages\CustomChatifyPage;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -19,11 +18,16 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
-use Kenepa\Banner\BannerPlugin;
-use Monzer\FilamentChatifyIntegration\ChatifyPlugin;
+//use Kenepa\Banner\BannerPlugin;
 use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
 use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 use Filament\Navigation\MenuItem;
+
+//banner 
+use Rupadana\FilamentAnnounce\FilamentAnnouncePlugin;
+use App\Filament\Resources\AvisosResource;
+
+
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -110,6 +114,14 @@ class AdminPanelProvider extends PanelProvider
 
             )
             ->plugin(FilamentOtpLoginPlugin::make())
+            ->plugin(
+                FilamentAnnouncePlugin::make()
+                    ->usingResource(AvisosResource::class)
+
+                    // ->pollingInterval('30s') // optional, by default it is set to null
+                    // ->defaultColor(Color::Blue) // optional, by default it is set to "primary"
+ 
+            )
             ->plugins([
                 FilamentBackgroundsPlugin::make()
                     ->showAttribution(false)
@@ -117,11 +129,6 @@ class AdminPanelProvider extends PanelProvider
                         MyImages::make()
                             ->directory('\mis_imagenes\fondos')
                     ),
-                BannerPlugin::make()
-                    ->persistsBannersInDatabase()
-                    ->title('Banner/Anuncios')
-                    ->navigationGroup('Configuracion')
-                    ->subheading('Anuncios para los administradores '),
                 
                 FilamentShieldPlugin::make(),
 

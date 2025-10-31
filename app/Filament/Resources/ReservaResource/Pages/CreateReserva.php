@@ -6,6 +6,9 @@ use App\Filament\Resources\ReservaResource;
 use App\Models\AreaComun;
 use App\Models\HorarioDisponible;
 use App\Models\Reserva;
+use App\Models\User;
+use App\Models\Factura;
+use App\Models\Departamento;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -15,7 +18,8 @@ use Illuminate\Database\Eloquent\Model;
 class CreateReserva extends CreateRecord
 {
     protected static string $resource = ReservaResource::class;
-
+    
+ 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Validar que el área común esté disponible
@@ -90,6 +94,38 @@ class CreateReserva extends CreateRecord
 
         // Validar conflictos con otras reservas
         $this->validarConflictosReservas($data['area_comun_id'], $fechaInicio, $fechaFin);
+        
+        //dd($data);
+        $departamento = Departamento::where('user_id',$data['residente_id'])->first();
+        
+        $recipient = User::find($data['residente_id']);
+
+        if($data['estado_reserva'] == 'pendiente')
+        {
+            $factura = new Factura();
+            $factura->user_id = $data['residente_id'];
+            $factura->departamento_id = $departamento->id;
+            $factura->tipo = 'reserva de area comun';
+            $factura->monto = $data['costo_total_calculado'];
+            $factura->estado = 'pendiente';
+            $factura->fecha_emision = Carbon::now();
+            $factura->fecha_vencimiento = Carbon::parse($data['fecha_hora_fin'])->toDateString();
+            $factura->descripcion = 'Factura por reserva de área común: ' . $areaComun->nombre;
+            $factura->save();
+
+            // Mostrar notificación de éxito
+            Notification::make()
+            ->title('Reserva y Factura Creadas')
+            ->body('Su reserva ha sido creada exitosamente y se ha generado la factura correspondiente. Tiene hasta el ' . Carbon::parse($data['fecha_hora_fin'])->toDateString() . ' para realizar el pago.')
+            ->success()
+            ->actions([
+                \Filament\Notifications\Actions\Action::make('ver_factura')
+                    ->label('Ver Factura')
+                    ->url(route('filament.admin.resources.facturas.edit', $factura->id))
+                    ->button()
+            ])
+            ->sendToDatabase($recipient);
+        }
 
         return $data;
     }

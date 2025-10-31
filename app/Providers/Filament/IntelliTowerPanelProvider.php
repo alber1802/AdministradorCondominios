@@ -23,9 +23,6 @@ use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
 use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 use Afsakar\FilamentOtpLogin\FilamentOtpLoginPlugin;
 
-use Monzer\FilamentChatifyIntegration\ChatifyPlugin;
-use App\Filament\Pages\CustomChatifyPage;
-
 use Filament\Navigation\MenuItem;
 
 //reset password  force user 
@@ -35,6 +32,9 @@ use App\Filament\Pages\CustomRenewPassword;
 //auth login
 use App\Filament\Pages\Auth\EmailVerification;
 
+//banner 
+use Rupadana\FilamentAnnounce\FilamentAnnouncePlugin;
+use App\Filament\Resources\AvisosResource; 
 
 
 class IntelliTowerPanelProvider extends PanelProvider
@@ -57,6 +57,7 @@ class IntelliTowerPanelProvider extends PanelProvider
                 'warning' => Color::Amber,
             ])
             ->font('Roboto Mono')
+            ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
             ->discoverResources(in: app_path('Filament/IntelliTower/Resources'), for: 'App\\Filament\\IntelliTower\\Resources')
             ->discoverPages(in: app_path('Filament/IntelliTower/Pages'), for: 'App\\Filament\\IntelliTower\\Pages')
@@ -118,6 +119,10 @@ class IntelliTowerPanelProvider extends PanelProvider
                     ->enableTwoFactorAuthentication(force: false)
             )
             ->plugin(FilamentOtpLoginPlugin::make())
+             ->plugin(
+                FilamentAnnouncePlugin::make()
+                    ->usingResource(AvisosResource::class)
+            )
             ->plugin(
                 RenewPasswordPlugin::make()
                     ->passwordExpiresIn(days: 90) // Renovar cada 90 días

@@ -179,6 +179,7 @@ class ReservaResource extends Resource
                                 'completada' => 'Completada',
                             ])
                             ->default('pendiente')
+                            
                             ->required()
                             ->columnSpan(1),
                     ])
@@ -209,12 +210,12 @@ class ReservaResource extends Resource
                 
                 Tables\Columns\TextColumn::make('fecha_hora_inicio')
                     ->label('Inicio')
-                    ->dateTime('d/m/Y H:i')
+                    ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->locale('es')->isoFormat('dddd D [de] MMMM [a las] HH:mm') : '-')
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('fecha_hora_fin')
                     ->label('Fin')
-                    ->dateTime('d/m/Y H:i')
+                    ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->locale('es')->isoFormat('dddd D [de] MMMM [a las] HH:mm') : '-')
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('costo_total_calculado')

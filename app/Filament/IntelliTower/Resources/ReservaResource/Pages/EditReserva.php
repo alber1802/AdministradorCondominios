@@ -6,6 +6,9 @@ use App\Filament\IntelliTower\Resources\ReservaResource;
 use App\Models\AreaComun;
 use App\Models\HorarioDisponible;
 use App\Models\Reserva;
+use App\Models\Factura;
+use App\Models\Departamento;
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -23,6 +26,9 @@ class EditReserva extends EditRecord
                 ->visible(fn (Reserva $record) => in_array($record->estado_reserva, ['pendiente'])),
         ];
     }
+
+   
+    
 
     protected function mutateFormDataBeforeSave(array $data): array
     {

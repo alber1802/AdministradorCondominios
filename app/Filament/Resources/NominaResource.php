@@ -20,7 +20,7 @@ class NominaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?string $navigationGroup = 'Condominios';
+    protected static ?string $navigationGroup = 'Finanzas';
     
     protected static ?string $navigationLabel = 'Nóminas';
     
